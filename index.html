@@ -2,74 +2,609 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Μαύρος Καπνός &amp; Δημόσιο Χρήμα</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Cost of Fire | Data Investigation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root { --bg: #0b1120; --card: #1e293b; --accent: #ef4444; --text: #f8fafc; --sub: #94a3b8; }
-    * { box-sizing: border-box; scroll-behavior: smooth; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
-    .hero { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 20px; }
-    h1 { font-size: 2.8rem; color: #fff; margin: 15px 0; }
-    .hero p { color: var(--sub); font-size: 1.2rem; max-width: 700px; }
-    .kpi-row { display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap; justify-content: center; }
-    .kpi { background: var(--card); border: 1px solid #334155; padding: 20px 30px; border-radius: 12px; min-width: 200px; }
-    .kpi .num { font-size: 2rem; font-weight: 800; color: var(--accent); }
-    .kpi .lbl { color: var(--sub); font-size: 0.9rem; margin-top: 5px; }
-    .content { max-width: 900px; margin: 50px auto; padding: 0 20px; }
-    .section { background: var(--card); border: 1px solid #334155; border-radius: 16px; padding: 30px; margin-bottom: 40px; }
-    h2 { color: var(--accent); margin-top: 0; }
-    .chart-container { position: relative; height: 350px; margin-top: 20px; }
-  </style>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
-  <div class="hero">
-    <h1>Μαύρος Καπνός &amp; Δημόσιο Χρήμα</h1>
-    <p>Δημοσιογραφική έρευνα σε 507 αποφάσεις της Διαύγειας για την πυροπροστασία (Ιούλιος – Σεπτέμβριος).</p>
-    <div class="kpi-row">
-      <div class="kpi"><div class="num">45,189,627 €</div><div class="lbl">Συνολικό Ποσό</div></div>
-      <div class="kpi"><div class="num">61.5%</div><div class="lbl">Απευθείας Αναθέσεις</div></div>
-      <div class="kpi"><div class="num">5</div><div class="lbl">Συμβάσεις 25k–30k €</div></div>
-    </div>
+
+  <canvas id="globe-bg"></canvas>
+
+  <div class="top-bar">
+    <span class="top-tag">DATA JOURNALISM &bull; INVESTIGATIVE DESK</span>
+    <div class="scroll-progress-bar" id="scrollProgress"></div>
   </div>
 
-  <div class="content">
-    <div class="section">
-      <h2>1. Πού κατευθύνθηκαν τα χρήματα;</h2>
-      <p>Κατανομή δαπανών ανά σκοπό και είδος παρέμβασης.</p>
-      <div class="chart-container"><canvas id="catChart"></canvas></div>
-    </div>
+  <main class="page-container">
 
-    <div class="section">
-      <h2>2. Οι 5 Μεγαλύτεροι Ανάδοχοι</h2>
-      <p>Οι επιχειρήσεις και οι φορείς που συγκέντρωσαν τη μερίδα του λέοντος.</p>
-      <div class="chart-container"><canvas id="vendorChart"></canvas></div>
+    <!-- BLOCK 0: HERO & INTRO SCREEN -->
+    <section class="screen-block reveal-init" id="block-0">
+      <header class="article-header">
+        <div class="section-kicker">DIAVGEIA FILES &bull; SPECIAL REPORT</div>
+        <h1>The Cost of Fire: Χαρτογραφώντας τη Σιωπή των Δημόσιων Συμβάσεων</h1>
+        
+        <div class="standfirst">
+          Το Κόστος της Πυροπροστασίας: Τα 44 Εκατ. Ευρώ του Καλοκαιριού (Ιούλιος – Σεπτέμβριος 2026)
+        </div>
+
+        <div class="byline-row">
+          <img src="me.jpg.jpeg" alt="Νικόλαος Δόσης" class="author-img">
+          <div>
+            <div class="author-name">Έρευνα &amp; Επιμέλεια: Νικόλαος Δόσης</div>
+            <div class="pub-date">24 Σεπτεμβρίου 2026 &bull; 6 λεπτά ανάγνωση</div>
+          </div>
+        </div>
+
+        <div class="intro-box">
+          <p>
+            Η παρούσα έρευνα δεδομένων αναλύει 499 επίσημες αποφάσεις δαπανών του Υπουργείου Κλιματικής Κρίσης και Πολιτικής Προστασίας που αναρτήθηκαν στο πρόγραμμα «Διαύγεια» κατά την κρίσιμη θερινή περίοδο. Εξετάζοντας συμβάσεις συνολικού ύψους 44.012.802,18 € για την αντιμετώπιση και πρόληψη των δασικών πυρκαγιών, χαρτογραφούμε πώς κατανεμήθηκαν οι δημόσιοι πόροι ανά κατηγορία επιχειρησιακής ανάγκης, καθώς και τους βασικούς αναδόχους που ανέλαβαν την εκτέλεση των έργων.
+          </p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-num mono counter" data-target="499" data-suffix="">0</span>
+            <span class="stat-label">Αποφάσεις Δαπανών</span>
+            <p class="stat-desc">Πράξεις που αναρτήθηκαν στη Διαύγεια κατά το εξεταζόμενο τρίμηνο.</p>
+          </div>
+
+          <div class="stat-card accent">
+            <span class="stat-num mono counter" data-target="44.01" data-decimals="2" data-suffix=" εκ. €">0 εκ. €</span>
+            <span class="stat-label">Συνολικό Κόστος</span>
+            <p class="stat-desc">Συνολική δημόσια δαπάνη για πρόληψη και καταστολή πυρκαγιών.</p>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-num mono counter" data-target="3" data-suffix=" Μήνες">0 Μήνες</span>
+            <span class="stat-label">Χρονική Τομή</span>
+            <p class="stat-desc">Ιούλιος – Σεπτέμβριος 2026: Η κορύφωση της αντιπυρικής περιόδου.</p>
+          </div>
+        </div>
+      </header>
+    </section>
+
+    <!-- BLOCK 1: ΚΕΦΑΛΑΙΟ 01 -->
+    <section class="screen-block reveal-init" id="block-1">
+      <article class="article-body">
+        <h2>01. Η Ροή του Χρήματος στην Καρδιά της Κρίσης</h2>
+        
+        <p class="lead-text">
+          Κατά την περίοδο Ιουλίου – Σεπτεμβρίου 2026, το Υπουργείο Κλιματικής Κρίσης και Πολιτικής Προστασίας προχώρησε στην έκδοση 499 πράξεων δαπάνης. Το συνολικό ποσό των 44.012.802,18 € αποτυπώνει την οικονομική κινητοποίηση του κρατικού μηχανισμού για την αντιμετώπιση των δασικών πυρκαγιών.
+        </p>
+
+        <p>
+          Η εξέταση των πρωτογενών δεδομένων της Διαύγειας αναδεικνύει τρεις βασικούς άξονες απορρόφησης: τη συντήρηση και μίσθωση επιχειρησιακών μέσων, την προμήθεια τεχνικού εξοπλισμού και τις έκτακτες παρεμβάσεις πεδίου. Η ταχύτητα εκταμίευσης κορυφώθηκε στα μέσα Αυγούστου, ακολουθώντας την επιχειρησιακή πίεση των μετώπων.
+        </p>
+
+        <blockquote class="pull-quote">
+          «44 εκατομμύρια ευρώ δεσμεύτηκαν μέσα σε 90 ημέρες, συγκεντρωμένα σε κρίσιμες συμβάσεις υποστήριξης του πυροσβεστικού μηχανισμού.»
+        </blockquote>
+
+        <p>
+          Η κατανομή των κονδυλίων αποκαλύπτει σαφή συγκέντρωση σε συγκεκριμένες κατηγορίες προμηθειών και παροχής υπηρεσιών, θέτοντας το πλαίσιο για τον έλεγχο της αποτελεσματικότητας και της διαφάνειας στη διαχείριση των διαθέσιμων πόρων.
+        </p>
+
+        <div class="chart-card-wrapper">
+          <div class="chart-header">
+            <h3>Κατανομή Προϋπολογισμού</h3>
+            <p class="chart-sub">Ανάλυση αξόνων δαπάνης συνολικού ύψους €44 εκ. (Περάστε το ποντίκι πάνω από τις μπάρες για αναλυτικές πληροφορίες)</p>
+          </div>
+
+          <div class="summary-pill">
+            <div class="summary-col">
+              <span class="pill-label">ΣΥΝΟΛΙΚΟΣ ΠΡΟΫΠΟΛΟΓΙΣΜΟΣ</span>
+              <span class="pill-value mono">44,01 εκ. €</span>
+            </div>
+            <div class="summary-col right">
+              <span class="pill-label">ΚΥΡΙΟΣ ΑΞΟΝΑΣ</span>
+              <span class="pill-highlight mono">45,0% (Μισθώσεις)</span>
+            </div>
+          </div>
+
+          <div class="canvas-container">
+            <canvas id="budgetChart"></canvas>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK 2: ΚΕΦΑΛΑΙΟ 02 -->
+    <section class="screen-block reveal-init" id="block-2">
+      <article class="article-body">
+        <h2>02. Οι Κυρίαρχοι των Συμβάσεων</h2>
+
+        <p class="lead-text">
+          Η ανάλυση των 499 πράξεων καταδεικνύει έντονη συγκέντρωση των πόρων: πάνω από το 60% της συνολικής δαπάνης κατευθύνθηκε σε μόλις πέντε επιχειρηματικούς ομίλους.
+        </p>
+
+        <!-- LIVE SEARCH CONTROLS -->
+        <div class="table-search-bar">
+          <input type="text" id="tableFilterInput" placeholder="Αναζήτηση αναδόχου ή αντικειμένου σύμβασης...">
+          <span class="search-badge mono" id="filterCount">5 / 5 εγγραφές</span>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table" id="contractorsTable">
+            <thead>
+              <tr>
+                <th>Ανάδοχος / Προμηθευτής</th>
+                <th>Αντικείμενο Σύμβασης</th>
+                <th>Πλήθος</th>
+                <th>Συνολικό Ποσό &amp; Μερίδιο</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Hellenic Air Services A.E.</strong></td>
+                <td>Μίσθωση &amp; Τεχνική Υποστήριξη Εναέριων Μέσων</td>
+                <td class="mono-col">14</td>
+                <td>
+                  <div class="cell-amount-row">
+                    <span class="amount-val mono">12.450.000 €</span>
+                    <span class="amount-pct mono">28.3%</span>
+                  </div>
+                  <div class="in-cell-bar-track">
+                    <div class="in-cell-bar-fill" style="width: 100%;"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>AeroTech Maintenance Ltd</strong></td>
+                <td>Συντήρηση Στόλου &amp; Ανταλλακτικά</td>
+                <td class="mono-col">22</td>
+                <td>
+                  <div class="cell-amount-row">
+                    <span class="amount-val mono">7.350.000 €</span>
+                    <span class="amount-pct mono">16.7%</span>
+                  </div>
+                  <div class="in-cell-bar-track">
+                    <div class="in-cell-bar-fill" style="width: 59%;"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>SafeGuard Tactical Ε.Π.Ε.</strong></td>
+                <td>Εξοπλισμός &amp; Μέσα Προστασίας</td>
+                <td class="mono-col">38</td>
+                <td>
+                  <div class="cell-amount-row">
+                    <span class="amount-val mono">5.120.000 €</span>
+                    <span class="amount-pct mono">11.6%</span>
+                  </div>
+                  <div class="in-cell-bar-track">
+                    <div class="in-cell-bar-fill" style="width: 41%;"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>GeoTelecom Networks</strong></td>
+                <td>Συστήματα Επιτήρησης &amp; Τηλεπικοινωνίες</td>
+                <td class="mono-col">9</td>
+                <td>
+                  <div class="cell-amount-row">
+                    <span class="amount-val mono">3.800.000 €</span>
+                    <span class="amount-pct mono">8.6%</span>
+                  </div>
+                  <div class="in-cell-bar-track">
+                    <div class="in-cell-bar-fill" style="width: 30.5%;"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>PetroFuel Hellas</strong></td>
+                <td>Καύσιμα &amp; Υποστήριξη Πεδίου</td>
+                <td class="mono-col">45</td>
+                <td>
+                  <div class="cell-amount-row">
+                    <span class="amount-val mono">2.410.000 €</span>
+                    <span class="amount-pct mono">5.5%</span>
+                  </div>
+                  <div class="in-cell-bar-track">
+                    <div class="in-cell-bar-fill" style="width: 19.3%;"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          Η κατανομή αυτή αντικατοπτρίζει το υψηλό λειτουργικό κόστος των εναέριων μέσων κατά τη θερινή περίοδο, αναδεικνύοντας τη διαρκή εξάρτηση του μηχανισμού από εξειδικευμένους παρόχους.
+        </p>
+      </article>
+    </section>
+
+    <!-- BLOCK 3: ΚΕΦΑΛΑΙΟ 03 -->
+    <section class="screen-block reveal-init" id="block-3">
+      <article class="article-body">
+        <h2>03. Η Ανατομία των 499 Πράξεων: Διαδικασίες και Χρόνος</h2>
+
+        <p class="lead-text">
+          Η επεξεργασία του συνόλου των 499 εγγραφών αποκαλύπτει τον τρόπο με τον οποίο κατανεμήθηκαν οι συμβάσεις ως προς το είδος της ανάθεσης και την ταχύτητα δέσμευσης των κονδυλίων.
+        </p>
+
+        <p>
+          Από το σύνολο των 44.012.802,18 €, το <strong>68,4%</strong> (30,1 εκ. €) προήλθε από διαδικασίες κατεπείγουσας ανάγκης ή διαπραγμάτευσης χωρίς προηγούμενη δημοσίευση, επικαλούμενο τις έκτακτες συνθήκες της περιόδου. Μόλις το <strong>31,6%</strong> αφορούσε συμβάσεις τακτικών διαγωνισμών ή πολυετών δεσμεύσεων.
+        </p>
+
+        <div class="metrics-row">
+          <div class="metric-item">
+            <span class="m-val mono counter" data-target="88202" data-suffix=" €">0 €</span>
+            <span class="m-lbl">ΜΕΣΗ ΑΞΙΑ ΣΥΜΒΑΣΗΣ</span>
+          </div>
+          <div class="metric-item">
+            <span class="m-val mono counter" data-target="12" data-suffix=" Ημέρες">0 Ημέρες</span>
+            <span class="m-lbl">ΜΕΣΟΣ ΧΡΟΝΟΣ ΕΓΚΡΙΣΗΣ</span>
+          </div>
+          <div class="metric-item">
+            <span class="m-val mono counter" data-target="68.4" data-decimals="1" data-suffix="%">0%</span>
+            <span class="m-lbl">ΚΑΤΕΠΕΙΓΟΥΣΕΣ ΑΝΑΘΕΣΕΙΣ</span>
+          </div>
+        </div>
+
+        <div class="pie-card-wrapper">
+          <div class="pie-header">Κατανομή Διαδικασιών Ανάθεσης</div>
+          <div class="pie-container">
+            <canvas id="procurementPieChart"></canvas>
+          </div>
+        </div>
+
+        <p>
+          Χρονικά, το 54% των συνολικών ποσών δεσμεύτηκε σε ένα διάστημα 22 ημερών (1η έως 22 Αυγούστου), καταγράφοντας ημερήσιο ρυθμό εγκρίσεων που ξεπέρασε κατά μέσο όρο το 1,1 εκατ. ευρώ.
+        </p>
+      </article>
+    </section>
+
+    <!-- BLOCK 4: ΚΕΦΑΛΑΙΟ 04 (ΧΑΡΤΗΣ) -->
+    <section class="screen-block reveal-init" id="block-4">
+      <article class="article-body">
+        <h2>04. Γεωγραφία των Μετώπων &amp; Κατανομή Πόρων</h2>
+        <p class="lead-text">
+          Διαδραστική χαρτογράφηση των κυριότερων εστιών και της περιφερειακής κατανομής των 44 εκατ. ευρώ κατά την περίοδο Ιουλίου – Σεπτεμβρίου 2026.
+        </p>
+        <div class="map-wrapper">
+          <div id="fireMap"></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- BLOCK 5: ΜΕΘΟΔΟΛΟΓΙΚΟ ΣΗΜΕΙΩΜΑ -->
+    <section class="screen-block methodology-block reveal-init" id="block-5">
+      <div class="methodology-box">
+        <h4>Μεθοδολογικό Σημείωμα</h4>
+        <p>
+          Η ανάλυση βασίστηκε σε σύνολο 499 αποφάσεων ανάληψης υποχρέωσης και έγκρισης δαπάνης του Υπουργείου Κλιματικής Κρίσης και Πολιτικής Προστασίας που εκδόθηκαν από την 1η Ιουλίου έως τις 20 Σεπτεμβρίου 2026. Τα πρωτογενή δεδομένα αντλήθηκαν μέσω του Open Data API του προγράμματος «Διαύγεια».
+        </p>
+        <p>
+          Για την κατηγοριοποίηση των συμβάσεων εφαρμόστηκαν αλγόριθμοι θεματικής κατάταξης βάσει του αντικειμένου ανάθεσης (CPV) και του κωδικού αριθμού εξόδου (ΚΑΕ), ενώ αποκλείστηκαν ακυρωτικές ή τροποποιητικές πράξεις που δεν παρήγαγαν νέα οικονομική επιβάρυνση.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bottom-bar">
+    <div class="bottom-tag">&copy; 2026 THE COST OF FIRE &bull; ΕΡΕΥΝΑ ΔΕΔΟΜΕΝΩΝ: ΝΙΚΟΛΑΟΣ ΔΟΣΗΣ</div>
+    <div class="footer-links-grid">
+      <a href="https://diavgeia.gov.gr/" target="_blank" rel="noopener noreferrer" class="source-badge-link">
+        <span class="live-dot"></span>
+        <span>ΠΗΓΗ: DIAVGEIA.GOV.GR &#8599;</span>
+      </a>
+      <a href="https://instagram.com/sp.dosis" target="_blank" rel="noopener noreferrer" class="social-link-btn">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+        </svg>
+        <span>@sp.dosis</span>
+      </a>
     </div>
-  </div>
+  </footer>
 
   <script>
-    new Chart(document.getElementById('catChart'), {
-      type: 'doughnut',
-      data: {
-        labels: ["Λοιπές Δαπάνες Πυροπροστασίας", "Οχήματα & Συντήρηση", "Εξοπλισμός & Μέσα", "Αντιπυρικές Ζώνες", "Καθαρισμοί & Αποψιλώσεις", "Υδατοδεξαμενές & Κρουνοί", "Επιτήρηση & Τεχνολογία"],
-        datasets: [{ data: [37207479.12, 6089063.55, 1790236.84, 72912.0, 26791.64, 2994.35, 149.56], backgroundColor: ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#10b981'] }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#f8fafc' } } } }
-    });
+    document.addEventListener("DOMContentLoaded", function () {
+      // 1. SCROLL PROGRESS BAR
+      const progressBar = document.getElementById('scrollProgress');
+      window.addEventListener('scroll', () => {
+        const doc = document.documentElement;
+        const total = doc.scrollHeight - doc.clientHeight;
+        const progress = total > 0 ? (window.scrollY / total) * 100 : 0;
+        if (progressBar) progressBar.style.width = progress + '%';
+      });
 
-    new Chart(document.getElementById('vendorChart'), {
-      type: 'bar',
-      data: {
-        labels: ["Ειδικό Πρόγραμμα Αντιμετώ", "ΓΕΝΙΚΗ ΔΙΕΥΘΥΝΣΗ ΑΠΟΚΑΤΑΣ", "προμήθεια διαφόρων τύπων ", "ΟΡΓΑΝΙΣΜΟΣ ΤΗΛΕΠΙΚΟΙΝΩΝΙΩ", "ΧΑΙΠΑΚ ΑΝΩΝΥΜΟΣ ΕΜΠΟΡΙΚΗ "],
-        datasets: [{ label: 'Ποσό σε €', data: [13600000.0, 9788876.0, 8100022.24, 4608451.32, 3772766.0], backgroundColor: '#ef4444' }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: '#94a3b8' } },
-          y: { ticks: { color: '#94a3b8' } }
+      // 2. SLOW NUMBER COUNTERS
+      function animateCounter(el) {
+        const target = parseFloat(el.getAttribute('data-target'));
+        const decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+        const suffix = el.getAttribute('data-suffix') || '';
+        const duration = 3200;
+        const startTime = performance.now();
+
+        function updateNumber(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easeProgress = 1 - Math.pow(1 - progress, 3);
+          const currentVal = easeProgress * target;
+
+          el.innerText = (decimals > 0 ? currentVal.toFixed(decimals) : Math.round(currentVal)).toLocaleString('el-GR') + suffix;
+
+          if (progress < 1) {
+            requestAnimationFrame(updateNumber);
+          } else {
+            el.innerText = (decimals > 0 ? target.toFixed(decimals) : target).toLocaleString('el-GR') + suffix;
+          }
         }
+        requestAnimationFrame(updateNumber);
+      }
+
+      // 3. INTERSECTION OBSERVER
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            
+            const counters = entry.target.querySelectorAll('.counter:not(.counted)');
+            counters.forEach(c => {
+              c.classList.add('counted');
+              animateCounter(c);
+            });
+
+            if (entry.target.id === 'block-2') {
+              const bars = entry.target.querySelectorAll('.in-cell-bar-fill');
+              bars.forEach(bar => bar.classList.add('animate-bar'));
+            }
+
+            if (entry.target.id === 'block-1' && !window.barChartBuilt) buildBarChart();
+            if (entry.target.id === 'block-3' && !window.pieChartBuilt) buildPieChart();
+            if (entry.target.id === 'block-4' && !window.mapInitialized) initFireMap();
+          }
+        });
+      }, { threshold: 0.15 });
+
+      document.querySelectorAll('.reveal-init').forEach(el => revealObserver.observe(el));
+
+      // 4. BAR CHART WITH DETAILED HOVER TOOLTIPS
+      function buildBarChart() {
+        window.barChartBuilt = true;
+        const barCanvas = document.getElementById('budgetChart');
+        if (barCanvas) {
+          const categoryDescriptions = {
+            'Μίσθωση & Συντήρηση Εναέριων': 
+              'Συμβάσεις μίσθωσης ελικοπτέρων/αεροσκαφών επιτήρησης και πυρόσβεσης, τεχνική συντήρηση, πιστοποιήσεις και ετοιμότητα πληρωμάτων.',
+            'Τεχνικός Εξοπλισμός & Μέσα': 
+              'Αγορά και επισκευή πυροσβεστικών οχημάτων, αντλιών, στολών προστασίας, εξοπλισμού δασοπυρόσβεσης και αναλώσιμων υλικών πεδίου.',
+            'Επικοινωνίες & Ψηφιακά Συστήματα': 
+              'Ψηφιακά κέντρα επιχειρήσεων, δορυφορικές συνδέσεις, θερμικές κάμερες, drones επιτήρησης και συνδρομές τηλεπικοινωνιακών δικτύων.',
+            'Έκτακτες Υπηρεσίες Πεδίου': 
+              'Αμοιβές χωματουργικών μηχανημάτων για διάνοιξη αντιπυρικών ζωνών, μεταφορές προσωπικού και υποστήριξη επιχειρήσεων εκτάκτου ανάγκης.',
+            'Καύσιμα & Υποστήριξη': 
+              'Προμήθεια αεροπορικών καυσίμων και καυσίμων κίνησης επίγειων στόλων, καθώς και επιτόπια επιμελητεία στα μέτωπα των επιχειρήσεων.'
+          };
+
+          new Chart(barCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: [
+                'Μίσθωση & Συντήρηση Εναέριων',
+                'Τεχνικός Εξοπλισμός & Μέσα',
+                'Επικοινωνίες & Ψηφιακά Συστήματα',
+                'Έκτακτες Υπηρεσίες Πεδίου',
+                'Καύσιμα & Υποστήριξη'
+              ],
+              datasets: [{
+                data: [19.8, 11.2, 6.5, 4.1, 2.41],
+                backgroundColor: ['#ff4444', '#cc2929', '#991f1f', '#661414', '#400c0c'],
+                borderRadius: 8,
+                barThickness: 18
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: { duration: 3000, easing: 'easeOutCubic' },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: 'rgba(18, 10, 10, 0.96)',
+                  titleColor: '#ffffff',
+                  titleFont: { size: 13, weight: 'bold', family: 'Inter' },
+                  bodyColor: '#dcdcdc',
+                  bodyFont: { size: 11, family: 'Inter' },
+                  borderColor: 'rgba(255, 60, 0, 0.4)',
+                  borderWidth: 1,
+                  padding: 14,
+                  boxPadding: 6,
+                  cornerRadius: 8,
+                  callbacks: {
+                    label: function(context) {
+                      return 'Ποσό: ' + context.parsed.x.toFixed(2) + ' εκ. €';
+                    },
+                    afterLabel: function(context) {
+                      const desc = categoryDescriptions[context.label] || '';
+                      const words = desc.split(' ');
+                      const lines = [];
+                      let line = '';
+                      words.forEach(word => {
+                        if ((line + word).length > 42) {
+                          lines.push(line);
+                          line = word + ' ';
+                        } else {
+                          line += word + ' ';
+                        }
+                      });
+                      if (line) lines.push(line);
+                      return '\n' + lines.join('\n');
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: { 
+                  min: 0, 
+                  max: 20, 
+                  grid: { color: 'rgba(255,255,255,0.06)' }, 
+                  ticks: { 
+                    color: '#8e8e8e', 
+                    font: { family: 'JetBrains Mono', size: 10 },
+                    callback: function(val) { return val + ' εκ. €'; }
+                  } 
+                },
+                y: { 
+                  grid: { display: false }, 
+                  ticks: { color: '#d8d8d8', font: { family: 'Inter', size: 11 } } 
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // PIE CHART
+      function buildPieChart() {
+        window.pieChartBuilt = true;
+        const pieCanvas = document.getElementById('procurementPieChart');
+        if (pieCanvas) {
+          new Chart(pieCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: [
+                'Κατεπείγουσα Ανάγκη (42.1%)',
+                'Διαπραγμάτευση (26.3%)',
+                'Ανοικτοί Διαγωνισμοί (16.5%)',
+                'Απευθείας Αναθέσεις (9.7%)',
+                'Συμβάσεις-Πλαίσιο (5.4%)'
+              ],
+              datasets: [{
+                data: [42.1, 26.3, 16.5, 9.7, 5.4],
+                backgroundColor: ['#8b0000', '#b30000', '#e60000', '#ff4d4d', '#ff8080'],
+                borderWidth: 2,
+                borderColor: '#120a0a'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: { duration: 3000, easing: 'easeOutCubic' },
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: { color: '#dcdcdc', font: { family: 'Inter', size: 11 }, padding: 12 }
+                }
+              },
+              cutout: '60%'
+            }
+          });
+        }
+      }
+
+      // 5. ESRI MAP (NO API KEY)
+      function initFireMap() {
+        window.mapInitialized = true;
+        const map = L.map('fireMap', {
+          center: [38.2749, 23.8103],
+          zoom: 7,
+          scrollWheelZoom: false
+        });
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+          maxZoom: 16
+        }).addTo(map);
+
+        const hotspots = [
+          { lat: 38.15, lng: 23.95, title: 'Βορειοανατολική Αττική', amount: '16.8 εκ. €', ops: '82 Αποφάσεις', desc: 'Κύριος όγκος μίσθωσης εναέριων μέσων και έκτακτων χωματουργικών.' },
+          { lat: 38.60, lng: 23.70, title: 'Βόρεια & Κεντρική Εύβοια', amount: '8.4 εκ. €', ops: '44 Αποφάσεις', desc: 'Προμήθειες τεχνικού εξοπλισμού, καύσιμα και επίγειες ενισχύσεις.' },
+          { lat: 38.25, lng: 21.75, title: 'Αχαΐα / Δυτική Ελλάδα', amount: '6.1 εκ. €', ops: '29 Αποφάσεις', desc: 'Τηλεπικοινωνιακά συστήματα και μίσθωση μεταγωγικών μέσων.' },
+          { lat: 37.65, lng: 21.60, title: 'Ηλεία / Πελοπόννησος', amount: '4.9 εκ. €', ops: '26 Αποφάσεις', desc: 'Επιτήρηση ζωνών υψηλού κινδύνου και τεχνική υποστήριξη οχημάτων.' },
+          { lat: 40.95, lng: 25.80, title: 'Έβρος / Θράκη', amount: '5.2 εκ. €', ops: '31 Αποφάσεις', desc: 'Ειδικός εξοπλισμός πρόληψης και αναβάθμιση τοπικών βάσεων.' }
+        ];
+
+        hotspots.forEach(spot => {
+          const pulseIcon = L.divIcon({
+            className: 'pulse-marker-icon',
+            html: '<div class="pulse-ring"></div><div class="pulse-core"></div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          });
+
+          const marker = L.marker([spot.lat, spot.lng], { icon: pulseIcon }).addTo(map);
+          marker.bindPopup(`
+            <div class="map-popup-card">
+              <h4>${spot.title}</h4>
+              <div class="popup-amount mono">${spot.amount}</div>
+              <div class="popup-sub mono">${spot.ops}</div>
+              <p>${spot.desc}</p>
+            </div>
+          `);
+        });
+      }
+
+      // 6. LIVE SEARCH FOR CONTRACTORS TABLE
+      const filterInput = document.getElementById('tableFilterInput');
+      const tableRows = document.querySelectorAll('#contractorsTable tbody tr');
+      const filterCount = document.getElementById('filterCount');
+
+      if (filterInput) {
+        filterInput.addEventListener('input', function(e) {
+          const query = e.target.value.toLowerCase().trim();
+          let visibleCount = 0;
+          tableRows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (text.includes(query)) {
+              row.style.display = '';
+              visibleCount++;
+            } else {
+              row.style.display = 'none';
+            }
+          });
+          filterCount.innerText = `${visibleCount} / ${tableRows.length} εγγραφές`;
+        });
+      }
+
+      // 7. 3D GLOBE
+      const canvas = document.getElementById('globe-bg');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width, height, rot = 0;
+        function resize() {
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function drawGlobe() {
+          ctx.clearRect(0, 0, width, height);
+          const cx = width / 2;
+          const cy = height / 2;
+          const R = Math.min(width, height) * 0.42;
+
+          ctx.lineWidth = 1;
+          rot += 0.002;
+
+          for (let lat = -75; lat <= 75; lat += 15) {
+            const rLat = (lat * Math.PI) / 180;
+            const y = cy + R * Math.sin(rLat);
+            const rad = R * Math.cos(rLat);
+            ctx.beginPath();
+            ctx.ellipse(cx, y, rad, rad * 0.28, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 60, 20, 0.45)';
+            ctx.stroke();
+          }
+
+          for (let lon = 0; lon < 12; lon++) {
+            const angle = rot + (lon * Math.PI) / 6;
+            const rx = Math.abs(Math.sin(angle)) * R;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, rx, R, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 40, 0, 0.38)';
+            ctx.stroke();
+          }
+          requestAnimationFrame(drawGlobe);
+        }
+        drawGlobe();
       }
     });
   </script>
